@@ -53,7 +53,7 @@ class SimpleDrawer
                 this.y = 0;
                 this.drawing = false;
                 this.getBWPixels(30);
-                this.drawExtent();
+                //this.drawExtent();
 
             }
         };
@@ -87,10 +87,26 @@ class SimpleDrawer
         offscreenCanvas.width = targetSizePx;
         offscreenCanvas.height = targetSizePx;
 
+
         const offscreenCtx = offscreenCanvas.getContext('2d');
         offscreenCtx.imageSmoothingQuality = "high";
 
-        offscreenCtx.drawImage(this.canvas, 0, 0, this.canvas.width, this.canvas.height, 0, 0, targetSizePx, targetSizePx);
+        const aspectRatio = (this.maxX - this.minX) / (this.maxY - this.minY);
+        let newWidth = 0;
+        let newHeight = 0;
+        if (aspectRatio > 1)
+        {
+            newHeight = targetSizePx / aspectRatio;
+            newWidth = targetSizePx;
+        }
+        else 
+        {
+            newHeight = targetSizePx;
+            newWidth = targetSizePx * aspectRatio;
+        }
+
+        offscreenCtx.drawImage(this.canvas, this.minX, this.minY, this.maxX - this.minX, 
+                this.maxY - this.minY, (targetSizePx - newWidth) / 2, (targetSizePx - newHeight) / 2, newWidth , newHeight);
 
         const imgd = offscreenCtx.getImageData(0, 0, targetSizePx, targetSizePx);
         const pix = imgd.data;
