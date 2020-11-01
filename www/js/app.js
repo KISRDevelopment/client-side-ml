@@ -24,10 +24,16 @@ class SimpleDrawer
         this.x = 0;
         this.y = 0;
 
+        this.minX = Infinity;
+        this.maxX = -Infinity;
+        this.minY = Infinity;
+        this.maxY = -Infinity;
+
         canvas.onmousedown = (e) => {
             this.x = e.offsetX;
             this.y = e.offsetY;
             this.drawing = true;
+            this._updateExtent(this.x, this.y);
         };
 
         canvas.onmousemove = (e) => {
@@ -35,18 +41,30 @@ class SimpleDrawer
                 this._drawLine(e.offsetX, e.offsetY);
                 this.x = e.offsetX;
                 this.y = e.offsetY;
+                this._updateExtent(this.x, this.y);
             }
         };
 
         canvas.onmouseup = (e) => {
             if (this.drawing) {
                 this._drawLine(e.offsetX, e.offsetY);
+                this._updateExtent(e.offsetX, e.offsetY);
                 this.x = 0;
                 this.y = 0;
                 this.drawing = false;
                 this.getBWPixels(30);
+                this.drawExtent();
+
             }
         };
+    }
+
+    _updateExtent(x, y)
+    {
+        this.minX = Math.min(x, this.minX);
+        this.maxX = Math.max(x, this.maxX);
+        this.minY = Math.min(y, this.minY);
+        this.maxY = Math.max(y, this.maxY);
     }
 
     _drawLine(toX, toY)
@@ -91,6 +109,16 @@ class SimpleDrawer
         }
         
         offscreenCtx.putImageData(imgd, 0, 0);
+    }
+
+    drawExtent()
+    {
+        const ctx = this.ctx;
+
+        ctx.strokeStyle = 'magenta';
+        console.log(this.minX, this.minY, this.maxX, this.maxY)
+        ctx.rect(this.minX, this.minY, this.maxX - this.minX, this.maxY - this.minY);
+        ctx.stroke();
     }
 }
 
