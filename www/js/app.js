@@ -21,7 +21,7 @@ function main()
         units: 4,
         activation: 'softmax'
     }));
-    const optimizer = tf.train.adam();
+    const optimizer = tf.train.adam(0.0001);
     model.compile({
       optimizer: optimizer,
       loss: 'categoricalCrossentropy',
@@ -30,20 +30,56 @@ function main()
 
 
     const labelMapping = {
-        "triangle" : [0, 0, 0, 0], 
+        "triangle" : [1, 0, 0, 0], 
         "square" : [0, 1, 0, 0],
         "hexagon" : [0, 0, 1, 0],
         "circle" : [0, 0, 0, 1]
     }
+    const reverseLabels = ["triangle", "square", "hexagon", "circle"];
+
+    const trainingInputs = [];
+    const trainingOutputs = [];
+    const predElms = [];
+
     btnAdd.onclick = function()
     {
         
         const r = document.querySelector('input[name="shape"]:checked');
         if (r !== null)
         {
-            const inputFeatures = drawer.getBWPixels(30);
+            const inputFeatures = drawer.features;
             const label = labelMapping[r.value];
-            model.fit(tf.tensor([inputFeatures]), tf.tensor([label]));
+            model.trainOnBatch(tf.tensor([inputFeatures]), tf.tensor([label]));
+
+            const liElm = document.createElement('li');
+            document.getElementById('trainingSet').appendChild(liElm);
+            liElm.classList.add('example');
+
+            const canvas = document.createElement('canvas');
+            liElm.appendChild(canvas);
+
+            canvas.width = drawer.normedCanvas.width;
+            canvas.height = drawer.normedCanvas.height;
+            canvas.getContext('2d').drawImage(drawer.normedCanvas, 0, 0);
+
+            const labelElm = document.createElement('span');
+            liElm.appendChild(labelElm);
+            labelElm.innerHTML = r.value;
+
+            const predElm = document.createElement('span');
+            liElm.appendChild(predElm);
+            predElms.push(predElm);
+
+            trainingInputs.push(inputFeatures)
+            trainingOutputs.push(label)
+
+            const preds = model.predict(tf.tensor(trainingInputs));
+            const argmax = preds.argMax(1).arraySync();
+            
+            predElms.forEach((elm, i) => {
+                
+                elm.innerHTML = reverseLabels[ argmax[i] ];
+            });
         }
         drawer.reset();
     }
@@ -180,8 +216,9 @@ class SimpleDrawer
         
         offscreenCtx.putImageData(imgd, 0, 0);
 
-        return output;
+        this.features = output;
     }
+
 
 }
 

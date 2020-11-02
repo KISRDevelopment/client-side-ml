@@ -13,3 +13,11 @@ p, li, button {
     height: 300px;
     border: 1px solid black;
 }
+
+li.example {
+    display: flex;
+    flex-direction: row;
+    width: 400px;
+    justify-content: space-between;
+    align-items: center;
+}
