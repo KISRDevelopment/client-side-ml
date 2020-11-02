@@ -15,10 +15,13 @@ function main()
         useBias: false
     }));
     model.add(tf.layers.dense({ 
-        units: 10
+        units: 20,
+        activation: 'tanh',
+        useBias: true
     }));
     model.add(tf.layers.dense({ 
         units: 4,
+        useBias: true,
         activation: 'softmax'
     }));
     const optimizer = tf.train.adam(0.0001);
@@ -31,9 +34,9 @@ function main()
 
     const labelMapping = {
         "triangle" : [1, 0, 0, 0], 
-        "square" : [0, 1, 0, 0],
-        "hexagon" : [0, 0, 1, 0],
-        "circle" : [0, 0, 0, 1]
+        "square" :   [0, 1, 0, 0],
+        "hexagon" :  [0, 0, 1, 0],
+        "circle" :   [0, 0, 0, 1]
     }
     const reverseLabels = ["triangle", "square", "hexagon", "circle"];
 
