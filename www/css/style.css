@@ -1,3 +1,12 @@
+html {
+    font-size: 10pt;
+
+}
+
+p, li, button {
+    font-size: 1.6rem;
+}
+
 #canvasShapes
 {
     width: 300px;

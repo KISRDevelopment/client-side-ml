@@ -3,8 +3,50 @@ function main()
 
 
     const canvas = document.getElementById('canvasShapes');
-    const drawer = new SimpleDrawer(canvas);
+    const normedCanvas = document.getElementById('resizedCanvas');
+    const drawer = new SimpleDrawer(canvas, normedCanvas);
 
+    const btnAdd = document.getElementById('btnAdd');
+
+    const model = tf.sequential();
+    model.add(tf.layers.dense({ 
+        inputShape: [900],
+        units: 900,
+        useBias: false
+    }));
+    model.add(tf.layers.dense({ 
+        units: 10
+    }));
+    model.add(tf.layers.dense({ 
+        units: 4,
+        activation: 'softmax'
+    }));
+    const optimizer = tf.train.adam();
+    model.compile({
+      optimizer: optimizer,
+      loss: 'categoricalCrossentropy',
+      metrics: ['accuracy'],
+    });
+
+
+    const labelMapping = {
+        "triangle" : [0, 0, 0, 0], 
+        "square" : [0, 1, 0, 0],
+        "hexagon" : [0, 0, 1, 0],
+        "circle" : [0, 0, 0, 1]
+    }
+    btnAdd.onclick = function()
+    {
+        
+        const r = document.querySelector('input[name="shape"]:checked');
+        if (r !== null)
+        {
+            const inputFeatures = drawer.getBWPixels(30);
+            const label = labelMapping[r.value];
+            model.fit(tf.tensor([inputFeatures]), tf.tensor([label]));
+        }
+        drawer.reset();
+    }
 }
 
 //
@@ -12,22 +54,14 @@ function main()
 //
 class SimpleDrawer
 {
-    constructor(canvas)
+    constructor(canvas, normedCanvas)
     {
         this.canvas = canvas;
+        this.normedCanvas = normedCanvas;
+
         this.ctx = canvas.getContext('2d');
-        this.drawing = false;
         
-        this.ctx.fillStyle = 'white';
-        this.ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        this.x = 0;
-        this.y = 0;
-
-        this.minX = Infinity;
-        this.maxX = -Infinity;
-        this.minY = Infinity;
-        this.maxY = -Infinity;
+        this.reset();
 
         canvas.onmousedown = (e) => {
             this.x = e.offsetX;
@@ -52,13 +86,31 @@ class SimpleDrawer
                 this.x = 0;
                 this.y = 0;
                 this.drawing = false;
-                this.getBWPixels(30);
-                //this.drawExtent();
+                this.getBWPixels(normedCanvas.width);
 
             }
         };
     }
 
+    reset()
+    {
+        this.drawing = false;
+        
+        this.ctx.fillStyle = 'white';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        const normedCtx = this.normedCanvas.getContext('2d');
+        normedCtx.fillStyle = 'white';
+        normedCtx.fillRect(0, 0, this.normedCanvas.width, this.normedCanvas.height);
+
+        this.x = 0;
+        this.y = 0;
+
+        this.minX = Infinity;
+        this.maxX = -Infinity;
+        this.minY = Infinity;
+        this.maxY = -Infinity;
+    }
     _updateExtent(x, y)
     {
         this.minX = Math.min(x, this.minX);
@@ -72,7 +124,7 @@ class SimpleDrawer
         const ctx = this.ctx;
         ctx.beginPath();
         ctx.strokeStyle = 'black';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 5;
         ctx.moveTo(this.x, this.y);
         ctx.lineTo(toX, toY);
         ctx.stroke();
@@ -82,11 +134,13 @@ class SimpleDrawer
     getBWPixels(targetSizePx)
     {
         const ctx = this.ctx;
+        const paddingPx = 2;
 
-        const offscreenCanvas = document.getElementById('resizedCanvas');
+        const drawingSizePx = targetSizePx - paddingPx;
+
+        const offscreenCanvas = this.normedCanvas;
         offscreenCanvas.width = targetSizePx;
         offscreenCanvas.height = targetSizePx;
-
 
         const offscreenCtx = offscreenCanvas.getContext('2d');
         offscreenCtx.imageSmoothingQuality = "high";
@@ -96,13 +150,13 @@ class SimpleDrawer
         let newHeight = 0;
         if (aspectRatio > 1)
         {
-            newHeight = targetSizePx / aspectRatio;
-            newWidth = targetSizePx;
+            newHeight = drawingSizePx / aspectRatio;
+            newWidth = drawingSizePx;
         }
         else 
         {
-            newHeight = targetSizePx;
-            newWidth = targetSizePx * aspectRatio;
+            newHeight = drawingSizePx;
+            newWidth = drawingSizePx * aspectRatio;
         }
 
         offscreenCtx.drawImage(this.canvas, this.minX, this.minY, this.maxX - this.minX, 
@@ -125,17 +179,10 @@ class SimpleDrawer
         }
         
         offscreenCtx.putImageData(imgd, 0, 0);
+
+        return output;
     }
 
-    drawExtent()
-    {
-        const ctx = this.ctx;
-
-        ctx.strokeStyle = 'magenta';
-        console.log(this.minX, this.minY, this.maxX, this.maxY)
-        ctx.rect(this.minX, this.minY, this.maxX - this.minX, this.maxY - this.minY);
-        ctx.stroke();
-    }
 }
 
 window.onload = main;
