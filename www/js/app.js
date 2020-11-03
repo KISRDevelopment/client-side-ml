@@ -91,7 +91,8 @@ function main()
     btnTrain.onclick = function()
     {
         model.fit(tf.tensor(trainingInputs), tf.tensor(trainingOutputs), {
-            epochs: 100
+            epochs: 100,
+            shuffle: true
         });
         const preds = model.predict(tf.tensor(trainingInputs));
         const argmax = preds.argMax(1).arraySync();
@@ -100,6 +101,18 @@ function main()
             elm.innerHTML = reverseLabels[ argmax[i] ];
         });
     }
+
+    const btnPredict = document.getElementById('btnPredict');
+    btnPredict.onclick = function()
+    {
+        const inputFeatures = drawer.features;
+        const preds = model.predict(tf.tensor([inputFeatures]));
+        const argmax = preds.argMax(1).arraySync();
+        const label = reverseLabels[argmax[0]];
+        document.getElementById('prediction').innerHTML = label;
+        
+    }
+
 }
 
 //
