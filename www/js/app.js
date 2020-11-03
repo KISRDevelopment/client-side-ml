@@ -52,7 +52,7 @@ function main()
         {
             const inputFeatures = drawer.features;
             const label = labelMapping[r.value];
-            model.trainOnBatch(tf.tensor([inputFeatures]), tf.tensor([label]));
+            //model.trainOnBatch(tf.tensor(trainingInputs), tf.tensor(trainingOutputs));
 
             const liElm = document.createElement('li');
             document.getElementById('trainingSet').appendChild(liElm);
@@ -76,15 +76,29 @@ function main()
             trainingInputs.push(inputFeatures)
             trainingOutputs.push(label)
 
-            const preds = model.predict(tf.tensor(trainingInputs));
-            const argmax = preds.argMax(1).arraySync();
+            // const preds = model.predict(tf.tensor(trainingInputs));
+            // const argmax = preds.argMax(1).arraySync();
             
-            predElms.forEach((elm, i) => {
+            // predElms.forEach((elm, i) => {
                 
-                elm.innerHTML = reverseLabels[ argmax[i] ];
-            });
+            //     elm.innerHTML = reverseLabels[ argmax[i] ];
+            // });
         }
         drawer.reset();
+    }
+
+    const btnTrain = document.getElementById('btnTrain');
+    btnTrain.onclick = function()
+    {
+        model.fit(tf.tensor(trainingInputs), tf.tensor(trainingOutputs), {
+            epochs: 100
+        });
+        const preds = model.predict(tf.tensor(trainingInputs));
+        const argmax = preds.argMax(1).arraySync();
+            
+        predElms.forEach((elm, i) => {
+            elm.innerHTML = reverseLabels[ argmax[i] ];
+        });
     }
 }
 
