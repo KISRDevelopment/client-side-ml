@@ -9,28 +9,28 @@ function main()
     const btnAdd = document.getElementById('btnAdd');
 
     const model = tf.sequential();
-    model.add(tf.layers.dense({ 
+    const hiddenLayer = tf.layers.dense({ 
         inputShape: [900],
-        units: 900,
-        useBias: false
-    }));
-    model.add(tf.layers.dense({ 
-        units: 20,
-        activation: 'tanh',
+        units: 5,
+        activation: 'relu',
         useBias: true
-    }));
-    model.add(tf.layers.dense({ 
+    });
+    const outputLayer = tf.layers.dense({ 
         units: 4,
         useBias: true,
         activation: 'softmax'
-    }));
+    });
+
+    model.add(hiddenLayer);
+    model.add(outputLayer);
+
     const optimizer = tf.train.adam(0.0001);
     model.compile({
       optimizer: optimizer,
       loss: 'categoricalCrossentropy',
       metrics: ['accuracy'],
     });
-
+    visualizeWeights(hiddenLayer);
 
     const labelMapping = {
         "triangle" : [1, 0, 0, 0], 
@@ -100,6 +100,8 @@ function main()
         predElms.forEach((elm, i) => {
             elm.innerHTML = reverseLabels[ argmax[i] ];
         });
+
+        visualizeWeights(hiddenLayer);
     }
 
     const btnPredict = document.getElementById('btnPredict');
@@ -112,6 +114,45 @@ function main()
         document.getElementById('prediction').innerHTML = label;
         
     }
+
+}
+
+function visualizeWeights(layer)
+{
+    const weights = layer.getWeights();
+    const pixelWeights = weights[0].transpose().reshape([5, 30, 30]);
+    
+    const maxVals = pixelWeights.max([1, 2]).arraySync();
+    const minVals = pixelWeights.min([1, 2]).arraySync();
+
+    const outputSize = 120;
+    const pixelSize = outputSize / 30;
+    
+    document.getElementById('weights').innerHTML = "";
+
+    const W = pixelWeights.arraySync();
+
+    for (let unit = 0; unit < 5; ++unit)
+    {
+        const canvas = document.createElement('canvas');
+        canvas.width = outputSize;
+        canvas.height = outputSize;
+        document.getElementById('weights').appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+
+        const w = W[unit];
+        for (let i = 0; i < w.length; ++i)
+        {
+            for (let j = 0; j < w[i].length; ++j)
+            {
+                const normedWeight = (w[i][j] - minVals[unit]) / (maxVals[unit] - minVals[unit]);
+                ctx.fillStyle = `hsla(43, 100%, 50%, ${normedWeight})`;
+                ctx.fillRect(j * pixelSize, outputSize - i * pixelSize, pixelSize, pixelSize);
+            }
+        }
+    }
+    
 
 }
 
