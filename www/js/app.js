@@ -58,12 +58,17 @@ function main()
     }
 
     const btnTrain = document.getElementById('btnTrain');
-    btnTrain.onclick = function()
+    btnTrain.onclick = async function()
     {
         model = buildModel();
-        model.fit(tf.tensor(trainingInputs), tf.tensor(trainingOutputs), {
+        await model.fit(tf.tensor(trainingInputs), tf.tensor(trainingOutputs), {
             epochs: 500,
-            shuffle: true
+            shuffle: true,
+            callbacks: {
+                onEpochEnd: function(b, l) {
+                    console.log(l)
+                }
+            }
         });
         const preds = model.predict(tf.tensor(trainingInputs));
         const argmax = preds.argMax(1).arraySync();
@@ -93,8 +98,8 @@ function buildModel()
     const model = tf.sequential();
     const hiddenLayer = tf.layers.dense({ 
         inputShape: [900],
-        units: 5,
-        activation: 'relu',
+        units: 10,
+        activation: 'tanh',
         useBias: true
     });
     const outputLayer = tf.layers.dense({ 
@@ -106,7 +111,7 @@ function buildModel()
     model.add(hiddenLayer);
     model.add(outputLayer);
 
-    const optimizer = tf.train.adam();
+    const optimizer = tf.train.adam(0.0001);
     model.compile({
       optimizer: optimizer,
       loss: 'categoricalCrossentropy',
@@ -118,9 +123,8 @@ function buildModel()
 
 function visualizeWeights(layer)
 {
-    console.log(layer.getWeights())
     const weights = layer.getWeights();
-    const pixelWeights = weights[0].transpose().reshape([5, 30, 30]);
+    const pixelWeights = weights[0].transpose().reshape([10, 30, 30]);
     
     const maxVals = pixelWeights.max([1, 2]).arraySync();
     const minVals = pixelWeights.min([1, 2]).arraySync();
