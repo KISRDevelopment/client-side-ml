@@ -8,30 +8,6 @@ function main()
 
     const btnAdd = document.getElementById('btnAdd');
 
-    const model = tf.sequential();
-    const hiddenLayer = tf.layers.dense({ 
-        inputShape: [900],
-        units: 5,
-        activation: 'relu',
-        useBias: true
-    });
-    const outputLayer = tf.layers.dense({ 
-        units: 4,
-        useBias: true,
-        activation: 'softmax'
-    });
-
-    model.add(hiddenLayer);
-    model.add(outputLayer);
-
-    const optimizer = tf.train.adam(0.0001);
-    model.compile({
-      optimizer: optimizer,
-      loss: 'categoricalCrossentropy',
-      metrics: ['accuracy'],
-    });
-    visualizeWeights(hiddenLayer);
-
     const labelMapping = {
         "triangle" : [1, 0, 0, 0], 
         "square" :   [0, 1, 0, 0],
@@ -44,6 +20,7 @@ function main()
     const trainingOutputs = [];
     const predElms = [];
 
+    let model = null;
     btnAdd.onclick = function()
     {
         
@@ -52,7 +29,6 @@ function main()
         {
             const inputFeatures = drawer.features;
             const label = labelMapping[r.value];
-            //model.trainOnBatch(tf.tensor(trainingInputs), tf.tensor(trainingOutputs));
 
             const liElm = document.createElement('li');
             document.getElementById('trainingSet').appendChild(liElm);
@@ -76,13 +52,6 @@ function main()
             trainingInputs.push(inputFeatures)
             trainingOutputs.push(label)
 
-            // const preds = model.predict(tf.tensor(trainingInputs));
-            // const argmax = preds.argMax(1).arraySync();
-            
-            // predElms.forEach((elm, i) => {
-                
-            //     elm.innerHTML = reverseLabels[ argmax[i] ];
-            // });
         }
         drawer.reset();
     }
@@ -90,8 +59,9 @@ function main()
     const btnTrain = document.getElementById('btnTrain');
     btnTrain.onclick = function()
     {
+        model = buildModel();
         model.fit(tf.tensor(trainingInputs), tf.tensor(trainingOutputs), {
-            epochs: 100,
+            epochs: 500,
             shuffle: true
         });
         const preds = model.predict(tf.tensor(trainingInputs));
@@ -101,7 +71,7 @@ function main()
             elm.innerHTML = reverseLabels[ argmax[i] ];
         });
 
-        visualizeWeights(hiddenLayer);
+        visualizeWeights(model);
     }
 
     const btnPredict = document.getElementById('btnPredict');
@@ -117,8 +87,37 @@ function main()
 
 }
 
+function buildModel()
+{
+    const model = tf.sequential();
+    const hiddenLayer = tf.layers.dense({ 
+        inputShape: [900],
+        units: 5,
+        activation: 'relu',
+        useBias: true
+    });
+    const outputLayer = tf.layers.dense({ 
+        units: 4,
+        useBias: true,
+        activation: 'softmax'
+    });
+
+    model.add(hiddenLayer);
+    model.add(outputLayer);
+
+    const optimizer = tf.train.adam();
+    model.compile({
+      optimizer: optimizer,
+      loss: 'categoricalCrossentropy',
+      metrics: ['accuracy'],
+    });
+
+    return model;
+}
+
 function visualizeWeights(layer)
 {
+    console.log(layer.getWeights())
     const weights = layer.getWeights();
     const pixelWeights = weights[0].transpose().reshape([5, 30, 30]);
     
@@ -241,7 +240,7 @@ class SimpleDrawer
     getBWPixels(targetSizePx)
     {
         const ctx = this.ctx;
-        const paddingPx = 2;
+        const paddingPx = 5;
 
         const drawingSizePx = targetSizePx - paddingPx;
 
@@ -252,22 +251,31 @@ class SimpleDrawer
         const offscreenCtx = offscreenCanvas.getContext('2d');
         offscreenCtx.imageSmoothingQuality = "high";
 
-        const aspectRatio = (this.maxX - this.minX) / (this.maxY - this.minY);
-        let newWidth = 0;
-        let newHeight = 0;
-        if (aspectRatio > 1)
-        {
-            newHeight = drawingSizePx / aspectRatio;
-            newWidth = drawingSizePx;
-        }
-        else 
-        {
-            newHeight = drawingSizePx;
-            newWidth = drawingSizePx * aspectRatio;
-        }
+        // const aspectRatio = (this.maxX - this.minX) / (this.maxY - this.minY);
+        // let newWidth = 0;
+        // let newHeight = 0;
+        // if (aspectRatio > 1)
+        // {
+        //     newHeight = drawingSizePx / aspectRatio;
+        //     newWidth = drawingSizePx;
+        // }
+        // else 
+        // {
+        //     newHeight = drawingSizePx;
+        //     newWidth = drawingSizePx * aspectRatio;
+        // }
 
-        offscreenCtx.drawImage(this.canvas, this.minX, this.minY, this.maxX - this.minX, 
-                this.maxY - this.minY, (targetSizePx - newWidth) / 2, (targetSizePx - newHeight) / 2, newWidth , newHeight);
+        // offscreenCtx.drawImage(this.canvas, this.minX, this.minY, this.maxX - this.minX, 
+        //         this.maxY - this.minY, (targetSizePx - newWidth) / 2, (targetSizePx - newHeight) / 2, newWidth , newHeight);
+
+        offscreenCtx.drawImage(this.canvas, this.minX, this.minY, 
+            this.maxX - this.minX, 
+            this.maxY - this.minY,
+            0, 
+            0,
+            targetSizePx,
+            targetSizePx
+        );
 
         const imgd = offscreenCtx.getImageData(0, 0, targetSizePx, targetSizePx);
         const pix = imgd.data;
