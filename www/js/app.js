@@ -35,6 +35,7 @@ function main()
             liElm.classList.add('example');
 
             const canvas = document.createElement('canvas');
+            canvas.classList.add('shape')
             liElm.appendChild(canvas);
 
             canvas.width = drawer.normedCanvas.width;
@@ -240,7 +241,7 @@ class SimpleDrawer
     getBWPixels(targetSizePx)
     {
         const ctx = this.ctx;
-        const paddingPx = 5;
+        const paddingPx = 7;
 
         const drawingSizePx = targetSizePx - paddingPx;
 
@@ -271,10 +272,10 @@ class SimpleDrawer
         offscreenCtx.drawImage(this.canvas, this.minX, this.minY, 
             this.maxX - this.minX, 
             this.maxY - this.minY,
-            0, 
-            0,
-            targetSizePx,
-            targetSizePx
+            (targetSizePx-drawingSizePx)/2, 
+            (targetSizePx-drawingSizePx)/2,
+            drawingSizePx,
+            drawingSizePx
         );
 
         const imgd = offscreenCtx.getImageData(0, 0, targetSizePx, targetSizePx);
