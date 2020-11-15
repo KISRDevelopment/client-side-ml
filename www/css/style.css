@@ -14,6 +14,10 @@ p, li, button {
     border: 1px solid black;
 }
 
+canvas.shape {
+    display: block; border: 1px solid black;
+}
+
 li.example {
     display: flex;
     flex-direction: row;

@@ -14,7 +14,7 @@
         <canvas style='display: block' width="300" height="300" id='canvasShapes'></canvas>
 
         <p>Normalized image:</p>
-        <canvas style='display: block; border: 1px solid black' width="30" height="30" id='resizedCanvas'></canvas>
+        <canvas class='shape' width="30" height="30" id='resizedCanvas'></canvas>
         
         <p>Indicate the shape:</p>
         <ul style='list-style: none;'>
@@ -25,6 +25,14 @@
         </ul>
 
         <button id="btnAdd">Add</button>
+        <button id="btnTrain">Train</button>
+        <button id="btnPredict">Predict</button>
+        <p id='prediction'></p>
+
+        <p>Weight Visualization:</p>
+        <div id='weights'>
+
+        </div>
 
         <p>Training Set, Labels, and Predictions:</p>
         <ul id='trainingSet' style='list-style: none;'>
