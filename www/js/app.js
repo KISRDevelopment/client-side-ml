@@ -71,19 +71,31 @@ function run(data)
         }));
     }
 
+    const progressBar = document.querySelector('.js-bar');
+
     const btnTrain = document.getElementById('btnTrain');
     btnTrain.onclick = async function()
     {
         model = buildModel();
+        btnTrain.disabled = true;
+        btnAdd.disabled = true;
+        btnPredict.disabled = true;
+        progressBar.style.left = '-100%';
         await model.fit(tf.tensor(trainingInputs), tf.tensor(trainingOutputs), {
             epochs: 500,
             shuffle: true,
             callbacks: {
                 onEpochEnd: function(b, l) {
-                    console.log(l)
+                    const perc = Math.ceil(b * 100 / 500);
+                    progressBar.style.left = `-${100 - perc}%`;
                 }
             }
         });
+
+        btnTrain.disabled = false;
+        btnAdd.disabled = false;
+        btnPredict.disabled = false;
+
         const preds = model.predict(tf.tensor(trainingInputs));
         const argmax = preds.argMax(1).arraySync();
             

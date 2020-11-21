@@ -25,3 +25,18 @@ li.example {
     justify-content: space-between;
     align-items: center;
 }
+
+#progress {
+    position: relative;
+    height: 32px;
+    border: 1px solid black;
+    overflow: hidden;
+}
+
+#progress > div {
+    position: absolute;
+    width: 100%;
+    height: 32px;
+    left: -100%;
+    background: red;
+}
