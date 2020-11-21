@@ -10,7 +10,7 @@ const labelMapping = {
 const reverseLabels = ["line", "triangle", "square", "circle"];
 
 const CFG = {
-    "epochs" : 100,
+    "epochs" : 200,
     "inputPx" : 30,
     "paddingPx" : 7
 }
@@ -29,6 +29,8 @@ function run(data)
     const canvas = document.getElementById('canvasShapes');
     const normedCanvas = document.getElementById('resizedCanvas');
     const drawer = new SimpleDrawer(canvas, normedCanvas);
+    const testDrawer = new SimpleDrawer(document.getElementById('canvasTest'));
+
     const progressBar = document.querySelector('.js-bar');
     const btnAdd = document.getElementById('btnAdd');
     const btnTrain = document.getElementById('btnTrain');
@@ -96,17 +98,21 @@ function run(data)
         
     }
 
-    
     const outputCanvas = document.getElementById('vectorShapes');
     const outputCtx = outputCanvas.getContext('2d');
     btnPredict.onclick = function()
     {
-        const inputFeatures = drawer.features;
+        const drawer = testDrawer;
+        const inputFeatures = testDrawer.features;
         const preds = model.predict(tf.tensor([inputFeatures]));
         const argmax = preds.argMax(1).arraySync();
         let label = reverseLabels[argmax[0]];
-        document.getElementById('prediction').innerHTML = label;
-        
+
+        // now we draw the shape
+        // we can preserve the aspect ratio and location because
+        // we know the extent of the user drawing and where they started
+        // and finished.
+        // so we only use the nn to tell us which shape to draw.
         outputCtx.fillStyle = 'white';
         outputCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
 
@@ -115,8 +121,6 @@ function run(data)
 
         outputCtx.strokeStyle = 'purple';
         outputCtx.lineWidth = 5;
-
-        label = "triangle";
 
         outputCtx.beginPath();
         if (label === "square")
@@ -135,7 +139,7 @@ function run(data)
         {
             outputCtx.ellipse(drawer.minX + 0.5 * width, drawer.minY + 0.5 * height, 0.5*width, 0.5*height, 0, 0, 2*Math.PI)
         }
-        else if (label === 'triangle')
+        else
         {
             outputCtx.moveTo(drawer.minX, drawer.maxY);
             outputCtx.lineTo(drawer.minX + 0.5 * width, drawer.minY);
@@ -145,6 +149,11 @@ function run(data)
         outputCtx.stroke();
     }
 
+    const btnClearTest = document.getElementById('btnClearTest');
+    btnClearTest.onclick = function()
+    {
+        testDrawer.reset();
+    }
 }
 
 function initTrainingList(trainingInputs, trainingLabels)

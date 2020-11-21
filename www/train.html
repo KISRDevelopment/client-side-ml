@@ -15,7 +15,7 @@
                 <p>Draw a shape and then select the appropriate label from the radio buttons below. Add the shape to the list of 
                     training examples and then train the neural network model.
                 </p>
-                <canvas style='display: inline-block' width="300" height="300" id='canvasShapes'></canvas>
+                <canvas style='display: block' width="300" height="300" id='canvasShapes'></canvas>
                 <ul class='c-labels'>
                     <li class='c-labels__label'><input type="radio" name="shape" value="line"><label for="line">Line</label></li>
                     <li class='c-labels__label'><input type="radio" name="shape" value="triangle"><label for="triangle">Triangle</label></li>
@@ -46,23 +46,17 @@
                     </tbody>
                 </table>
             </div>
-            <div class='l-container__child'>
-                
+            <div class='l-container__child testbg'>
+                <h1>Test the Model!</h1>
+                <p>Draw a shape then click Predict to see what the model thinks.</p>
+                <canvas  style='display: block' width="300" height="300" id='canvasTest'></canvas>
+                <br>
+                <button id="btnPredict">Predict</button> <button id="btnClearTest">Clear</button>
+                <br>
+                <canvas style='display: block' width="300" height="300" id='vectorShapes'></canvas>
+
             </div>
         </div>
 
-        <canvas style='display: inline-block' width="300" height="300" id='vectorShapes'></canvas>
-        
-
-        <canvas style='display: none' class='shape' width="30" height="30" id='resizedCanvas'></canvas>
-        
-
-        
-        <button id="btnPredict">Predict</button>
-        <p id='prediction'></p>
-
-        <div id='weights' style='display: none'></div>
-
-        
     </body>
 </html>

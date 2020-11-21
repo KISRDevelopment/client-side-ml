@@ -10,10 +10,9 @@ p, li, button {
     font-size: 1.6rem;
 }
 
-#canvasShapes, #vectorShapes
+#canvasShapes, #canvasTest
 {
-    width: 300px;
-    height: 300px;
+
     border: 1px solid black;
 }
 
@@ -34,7 +33,7 @@ table.examples td {
 #progress {
     position: relative;
     height: 32px;
-    border: 1px solid black;
+
     overflow: hidden;
     margin-top: 10px;
 }
@@ -44,7 +43,7 @@ table.examples td {
     width: 100%;
     height: 32px;
     left: -100%;
-    background: red;
+    background: #e200e6;
 }
 
 .l-container {
@@ -74,4 +73,9 @@ table.examples td {
     border: 1px solid #fd7aff;
     padding: 10px;
     border-radius: 25px;
+}
+
+.testbg {
+
+    padding: 10px;
 }
