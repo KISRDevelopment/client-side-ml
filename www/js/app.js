@@ -108,6 +108,8 @@ function run(data)
         const argmax = preds.argMax(1).arraySync();
         let label = reverseLabels[argmax[0]];
 
+        document.getElementById('predictionResult').innerHTML = label;
+        
         // now we draw the shape
         // we can preserve the aspect ratio and location because
         // we know the extent of the user drawing and where they started

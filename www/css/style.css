@@ -79,3 +79,9 @@ table.examples td {
 
     padding: 10px;
 }
+
+#predictionResult {
+    font-size: 2rem;
+    font-weight: bold;
+    color: purple;
+}
