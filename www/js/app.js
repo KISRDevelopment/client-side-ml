@@ -9,12 +9,12 @@ function main()
     const btnAdd = document.getElementById('btnAdd');
 
     const labelMapping = {
-        "triangle" : [1, 0, 0, 0], 
-        "square" :   [0, 1, 0, 0],
-        "hexagon" :  [0, 0, 1, 0],
+        "line" : [1, 0, 0, 0], 
+        "triangle" :   [0, 1, 0, 0],
+        "square" :  [0, 0, 1, 0],
         "circle" :   [0, 0, 0, 1]
     }
-    const reverseLabels = ["triangle", "square", "hexagon", "circle"];
+    const reverseLabels = ["line", "triangle", "square", "circle"];
 
     const trainingInputs = [];
     const trainingOutputs = [];
@@ -55,6 +55,8 @@ function main()
 
         }
         drawer.reset();
+        console.log(trainingInputs);
+        console.log(trainingOutputs);
     }
 
     const btnTrain = document.getElementById('btnTrain');
