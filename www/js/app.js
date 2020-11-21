@@ -65,14 +65,14 @@ function run(data)
 
         }
         drawer.reset();
-        console.log(JSON.stringify({
-            "trainingInputs" : trainingInputs,
-            "trainingLabels" : trainingLabels
-        }));
+        // console.log(JSON.stringify({
+        //     "trainingInputs" : trainingInputs,
+        //     "trainingLabels" : trainingLabels
+        // }));
     }
 
     const progressBar = document.querySelector('.js-bar');
-
+    model = buildModel();
     const btnTrain = document.getElementById('btnTrain');
     btnTrain.onclick = async function()
     {
@@ -82,7 +82,7 @@ function run(data)
         btnPredict.disabled = true;
         progressBar.style.left = '-100%';
         await model.fit(tf.tensor(trainingInputs), tf.tensor(trainingOutputs), {
-            epochs: 500,
+            epochs: 10,
             shuffle: true,
             callbacks: {
                 onEpochEnd: function(b, l) {
@@ -107,14 +107,52 @@ function run(data)
     }
 
     const btnPredict = document.getElementById('btnPredict');
+    const outputCanvas = document.getElementById('vectorShapes');
+    const outputCtx = outputCanvas.getContext('2d');
     btnPredict.onclick = function()
     {
         const inputFeatures = drawer.features;
         const preds = model.predict(tf.tensor([inputFeatures]));
         const argmax = preds.argMax(1).arraySync();
-        const label = reverseLabels[argmax[0]];
+        let label = reverseLabels[argmax[0]];
         document.getElementById('prediction').innerHTML = label;
         
+        outputCtx.fillStyle = 'white';
+        outputCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+
+        const width = drawer.maxX - drawer.minX;
+        const height = drawer.maxY - drawer.minY;
+
+        outputCtx.strokeStyle = 'purple';
+        outputCtx.lineWidth = 5;
+
+        label = "triangle";
+
+        outputCtx.beginPath();
+        if (label === "square")
+        {
+            
+            outputCtx.rect(drawer.minX, drawer.minY, width, height);
+            
+        }
+        else if (label === "line")
+        {
+            outputCtx.moveTo(drawer.startx, drawer.starty);
+
+            outputCtx.lineTo(drawer.endx,  drawer.endy);
+        }
+        else if (label === 'circle')
+        {
+            outputCtx.ellipse(drawer.minX + 0.5 * width, drawer.minY + 0.5 * height, 0.5*width, 0.5*height, 0, 0, 2*Math.PI)
+        }
+        else if (label === 'triangle')
+        {
+            outputCtx.moveTo(drawer.minX, drawer.maxY);
+            outputCtx.lineTo(drawer.minX + 0.5 * width, drawer.minY);
+            outputCtx.lineTo(drawer.maxX, drawer.maxY);
+            outputCtx.lineTo(drawer.minX, drawer.maxY)
+        }
+        outputCtx.stroke();
     }
 
 }
@@ -247,6 +285,8 @@ class SimpleDrawer
         canvas.onmousedown = (e) => {
             this.x = e.offsetX;
             this.y = e.offsetY;
+            this.startx = this.x;
+            this.starty = this.y;
             this.drawing = true;
             this._updateExtent(this.x, this.y);
         };
@@ -266,6 +306,9 @@ class SimpleDrawer
                 this._updateExtent(e.offsetX, e.offsetY);
                 this.x = 0;
                 this.y = 0;
+                this.endx = e.offsetX;
+                this.endy = e.offsetY;
+
                 this.drawing = false;
                 this.getBWPixels(normedCanvas.width);
 
@@ -327,7 +370,7 @@ class SimpleDrawer
         offscreenCtx.fillStyle = 'white';
         offscreenCtx.fillRect(0, 0, targetSizePx, targetSizePx);
         offscreenCtx.imageSmoothingQuality = "high";
-
+        
         offscreenCtx.drawImage(this.canvas, this.minX, this.minY, 
             this.maxX - this.minX, 
             this.maxY - this.minY,
@@ -336,7 +379,8 @@ class SimpleDrawer
             drawingSizePx,
             drawingSizePx
         );
-
+        
+        
         const imgd = offscreenCtx.getImageData(0, 0, targetSizePx, targetSizePx);
         const pix = imgd.data;
         

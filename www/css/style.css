@@ -7,7 +7,7 @@ p, li, button {
     font-size: 1.6rem;
 }
 
-#canvasShapes
+#canvasShapes, #vectorShapes
 {
     width: 300px;
     height: 300px;
