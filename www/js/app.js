@@ -1,3 +1,19 @@
+
+// one hot encoding of labels
+const labelMapping = {
+        "line" : [1, 0, 0, 0], 
+        "triangle" :   [0, 1, 0, 0],
+        "square" :  [0, 0, 1, 0],
+        "circle" :   [0, 0, 0, 1]
+}
+
+const reverseLabels = ["line", "triangle", "square", "circle"];
+
+const CFG = {
+    "epochs" : 100,
+    "inputPx" : 30
+}
+
 function main()
 {
     fetch('training_data.json')
@@ -15,21 +31,15 @@ function run(data)
 
     const btnAdd = document.getElementById('btnAdd');
 
-    const labelMapping = {
-        "line" : [1, 0, 0, 0], 
-        "triangle" :   [0, 1, 0, 0],
-        "square" :  [0, 0, 1, 0],
-        "circle" :   [0, 0, 0, 1]
-    }
-    const reverseLabels = ["line", "triangle", "square", "circle"];
-
     const trainingInputs = data.trainingInputs;
     const trainingOutputs = data.trainingLabels.map((o) => labelMapping[o]);
     const trainingLabels = data.trainingLabels;
     const predElms = [];
-    initTrainingList(trainingInputs, trainingLabels, 30, predElms);
+    
+    let model = buildModel();
+    initTrainingList(trainingInputs, trainingLabels);
+    updatePredictions(trainingInputs, model);
 
-    let model = null;
     btnAdd.onclick = function()
     {
         
@@ -40,25 +50,7 @@ function run(data)
             const label = labelMapping[r.value];
             trainingLabels.push(r.value);
 
-            const liElm = document.createElement('li');
-            document.getElementById('trainingSet').appendChild(liElm);
-            liElm.classList.add('example');
-
-            const canvas = document.createElement('canvas');
-            canvas.classList.add('shape')
-            liElm.appendChild(canvas);
-
-            canvas.width = drawer.normedCanvas.width;
-            canvas.height = drawer.normedCanvas.height;
-            canvas.getContext('2d').drawImage(drawer.normedCanvas, 0, 0);
-
-            const labelElm = document.createElement('span');
-            liElm.appendChild(labelElm);
-            labelElm.innerHTML = r.value;
-
-            const predElm = document.createElement('span');
-            liElm.appendChild(predElm);
-            predElms.push(predElm);
+            addExample(inputFeatures, r.value);
 
             trainingInputs.push(inputFeatures)
             trainingOutputs.push(label)
@@ -72,38 +64,39 @@ function run(data)
     }
 
     const progressBar = document.querySelector('.js-bar');
-    model = buildModel();
+    
     const btnTrain = document.getElementById('btnTrain');
     btnTrain.onclick = async function()
     {
         model = buildModel();
+
+        // disable buttons
         btnTrain.disabled = true;
         btnAdd.disabled = true;
         btnPredict.disabled = true;
+
+        // init progress bar to 0
         progressBar.style.left = '-100%';
+
+        // train the model
         await model.fit(tf.tensor(trainingInputs), tf.tensor(trainingOutputs), {
-            epochs: 10,
+            epochs: CFG.epochs,
             shuffle: true,
             callbacks: {
                 onEpochEnd: function(b, l) {
-                    const perc = Math.ceil(b * 100 / 500);
+                    const perc = Math.ceil(b * 100 / CFG.epochs);
                     progressBar.style.left = `-${100 - perc}%`;
                 }
             }
         });
 
+        // re-enable buttons
         btnTrain.disabled = false;
         btnAdd.disabled = false;
         btnPredict.disabled = false;
 
-        const preds = model.predict(tf.tensor(trainingInputs));
-        const argmax = preds.argMax(1).arraySync();
-            
-        predElms.forEach((elm, i) => {
-            elm.innerHTML = reverseLabels[ argmax[i] ];
-        });
-
-        visualizeWeights(model);
+        updatePredictions(trainingInputs, model);
+        
     }
 
     const btnPredict = document.getElementById('btnPredict');
@@ -157,50 +150,78 @@ function run(data)
 
 }
 
-function initTrainingList(trainingInputs, trainingLabels, sizePx, predElms)
+function initTrainingList(trainingInputs, trainingLabels)
 {
     for (let i = 0; i < trainingInputs.length; ++i)
     {
         const input = trainingInputs[i];
         const output = trainingLabels[i];
-
-        const liElm = document.createElement('li');
-        document.getElementById('trainingSet').appendChild(liElm);
-        liElm.classList.add('example');
-
-        const canvas = document.createElement('canvas');
-        canvas.classList.add('shape');
-        liElm.appendChild(canvas);
-
-        canvas.width = sizePx;
-        canvas.height = sizePx;
-
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, sizePx, sizePx);
-        const imgd = ctx.getImageData(0, 0, sizePx, sizePx);
-        const pix = imgd.data;
-        for (var j = 0; j < pix.length; j += 4)
-        {
-            const ison = input[j / 4] == 1;
-
-            pix[j] = (ison) ? 0 : 255;
-            pix[j+1] = (ison) ? 0 : 255;
-            pix[j+2] = (ison) ? 0 : 255;
-        }
-        ctx.putImageData(imgd, 0, 0);
-        
-        const labelElm = document.createElement('span');
-        liElm.appendChild(labelElm);
-        labelElm.innerHTML = output;
-
-        const predElm = document.createElement('span');
-        liElm.appendChild(predElm);
-        predElms.push(predElm);   
-
+        addExample(input, output);
     }
 }
 
+function updatePredictions(trainingInputs, model)
+{
+
+    const predElms = document.querySelectorAll('.js-pred');
+    const preds = model.predict(tf.tensor(trainingInputs));
+    const hardPreds = preds.argMax(1).arraySync();
+
+    for (let i = 0; i < trainingInputs.length; ++i)
+    {
+        const input = trainingInputs[i];
+        const predictedLabel = reverseLabels[hardPreds[i]];
+
+        // we manipulate the index because we are _prepending_ to the list
+        predElms[trainingInputs.length - i - 1].innerHTML = predictedLabel;
+    }
+}
+function addExample(input, output)
+{
+    const sizePx = Math.sqrt(input.length);
+
+
+    const trElm = document.createElement('tr');
+    document.getElementById('tblExamples').prepend(trElm);
+
+    const tdCanvas = document.createElement('td');
+    trElm.appendChild(tdCanvas);
+
+    // init canvas for drawn shape
+    const canvas = document.createElement('canvas');
+    canvas.classList.add('shape');
+    tdCanvas.appendChild(canvas);
+    canvas.width = sizePx;
+    canvas.height = sizePx;
+
+    // draw the shape
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, sizePx, sizePx);
+    const imgd = ctx.getImageData(0, 0, sizePx, sizePx);
+    const pix = imgd.data;
+    for (var j = 0; j < pix.length; j += 4)
+    {
+        const ison = input[j / 4] == 1;
+        pix[j] = (ison) ? 0 : 255;
+        pix[j+1] = (ison) ? 0 : 255;
+        pix[j+2] = (ison) ? 0 : 255;
+    }
+    ctx.putImageData(imgd, 0, 0);
+    
+    // set label
+    const tdLabel = document.createElement('td');
+    trElm.appendChild(tdLabel);
+    tdLabel.innerHTML = output;
+
+    // prediction element
+    const tdPrediction = document.createElement('td');
+    trElm.appendChild(tdPrediction);
+    tdPrediction.classList.add('js-pred');
+    tdPrediction.innerHTML = "";
+}
+
+// creates a TF model
 function buildModel()
 {
     const model = tf.sequential();
@@ -227,45 +248,6 @@ function buildModel()
     });
 
     return model;
-}
-
-function visualizeWeights(layer)
-{
-    const weights = layer.getWeights();
-    const pixelWeights = weights[0].transpose().reshape([10, 30, 30]);
-    
-    const maxVals = pixelWeights.max([1, 2]).arraySync();
-    const minVals = pixelWeights.min([1, 2]).arraySync();
-
-    const outputSize = 120;
-    const pixelSize = outputSize / 30;
-    
-    document.getElementById('weights').innerHTML = "";
-
-    const W = pixelWeights.arraySync();
-
-    for (let unit = 0; unit < 5; ++unit)
-    {
-        const canvas = document.createElement('canvas');
-        canvas.width = outputSize;
-        canvas.height = outputSize;
-        document.getElementById('weights').appendChild(canvas);
-
-        const ctx = canvas.getContext('2d');
-
-        const w = W[unit];
-        for (let i = 0; i < w.length; ++i)
-        {
-            for (let j = 0; j < w[i].length; ++j)
-            {
-                const normedWeight = (w[i][j] - minVals[unit]) / (maxVals[unit] - minVals[unit]);
-                ctx.fillStyle = `hsla(43, 100%, 50%, ${normedWeight})`;
-                ctx.fillRect(j * pixelSize, outputSize - i * pixelSize, pixelSize, pixelSize);
-            }
-        }
-    }
-    
-
 }
 
 //

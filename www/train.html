@@ -8,39 +8,61 @@
         <script type="module" src="js/app.js"></script>
     </head>
     <body>
-        <h1>Train a Neural Network to Recognize Drawn Shapes</h1>
-        
-        <p>Draw the shape:</p>
-        <canvas style='display: inline-block' width="300" height="300" id='canvasShapes'></canvas>
+
+        <div class='l-container'>
+            <div class='l-container__child trainbg'>
+                <h1>Add Examples and Train the Neural Network</h1>
+                <p>Draw a shape and then select the appropriate label from the radio buttons below. Add the shape to the list of 
+                    training examples and then train the neural network model.
+                </p>
+                <canvas style='display: inline-block' width="300" height="300" id='canvasShapes'></canvas>
+                <ul class='c-labels'>
+                    <li class='c-labels__label'><input type="radio" name="shape" value="line"><label for="line">Line</label></li>
+                    <li class='c-labels__label'><input type="radio" name="shape" value="triangle"><label for="triangle">Triangle</label></li>
+                    <li class='c-labels__label'><input type="radio" name="shape" value="square"><label for="square">Square</label></li>
+                    <li class='c-labels__label'><input type="radio" name="shape" value="circle"><label for="circle">Circle</label></li>
+                </ul>
+                <br>
+                <button id="btnAdd">Add Example</button> <button id="btnTrain">Train Model</button>
+
+                <div id='progress'>
+                    <div class='js-bar'></div>
+                </div>
+
+                <h2>Training Set</h2>
+                <ul id='trainingSet' style='list-style: none;'>
+
+                </ul>
+                <table class='examples'>
+                    <thead>
+                        <tr>
+                            <th>Example</th>
+                            <th>Label</th>
+                            <th>Model Prediction</th>
+                        </tr>
+                    </thead>
+                    <tbody  id='tblExamples'>
+
+                    </tbody>
+                </table>
+            </div>
+            <div class='l-container__child'>
+                
+            </div>
+        </div>
+
         <canvas style='display: inline-block' width="300" height="300" id='vectorShapes'></canvas>
         
-        <p>Normalized image:</p>
-        <canvas class='shape' width="30" height="30" id='resizedCanvas'></canvas>
-        
-        <p>Indicate the shape:</p>
-        <ul style='list-style: none;'>
-            <li><input type="radio" name="shape" value="line"><label for="line">Line</label></li>
-            <li><input type="radio" name="shape" value="triangle"><label for="triangle">Triangle</label></li>
-            <li><input type="radio" name="shape" value="square"><label for="square">Square</label></li>
-            <li><input type="radio" name="shape" value="circle"><label for="circle">Circle</label></li>
-        </ul>
 
-        <button id="btnAdd">Add</button>
-        <button id="btnTrain">Train</button>
+        <canvas style='display: none' class='shape' width="30" height="30" id='resizedCanvas'></canvas>
+        
+
+        
         <button id="btnPredict">Predict</button>
         <p id='prediction'></p>
 
-        <p>Weight Visualization:</p>
-        <div id='weights'>
+        <div id='weights' style='display: none'></div>
 
-        </div>
-
-        <div id='progress'>
-            <div class='js-bar'></div>
-        </div>
-        <p>Training Set, Labels, and Predictions:</p>
-        <ul id='trainingSet' style='list-style: none;'>
-
-        </ul>
+        
     </body>
 </html>

@@ -2,6 +2,9 @@ html {
     font-size: 10pt;
 
 }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
 
 p, li, button {
     font-size: 1.6rem;
@@ -15,15 +18,17 @@ p, li, button {
 }
 
 canvas.shape {
-    display: block; border: 1px solid black;
+    display: inline-block; border: 1px solid black;
 }
 
-li.example {
-    display: flex;
-    flex-direction: row;
-    width: 400px;
-    justify-content: space-between;
-    align-items: center;
+table.examples {
+    width: 100%;
+    font-size: 1.6rem;
+    
+}
+
+table.examples td {
+    text-align: center;
 }
 
 #progress {
@@ -31,6 +36,7 @@ li.example {
     height: 32px;
     border: 1px solid black;
     overflow: hidden;
+    margin-top: 10px;
 }
 
 #progress > div {
@@ -39,4 +45,33 @@ li.example {
     height: 32px;
     left: -100%;
     background: red;
+}
+
+.l-container {
+    width: 1024px;
+    margin: auto;
+    display: flex;
+    flex-direction: row;
+}
+
+.l-container__child {
+    width: 512px;
+}
+
+.c-labels {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.c-labels__label {
+    display: inline-block;
+    padding: 5px;
+}
+
+.trainbg {
+    background: #fed6ff;
+    border: 1px solid #fd7aff;
+    padding: 10px;
+    border-radius: 25px;
 }
