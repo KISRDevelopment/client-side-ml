@@ -1,5 +1,12 @@
 function main()
 {
+    fetch('training_data.json')
+        .then(response => response.json())
+        .then(data => run(data));
+
+}
+function run(data)
+{
 
 
     const canvas = document.getElementById('canvasShapes');
@@ -16,9 +23,11 @@ function main()
     }
     const reverseLabels = ["line", "triangle", "square", "circle"];
 
-    const trainingInputs = [];
-    const trainingOutputs = [];
+    const trainingInputs = data.trainingInputs;
+    const trainingOutputs = data.trainingLabels.map((o) => labelMapping[o]);
+    const trainingLabels = data.trainingLabels;
     const predElms = [];
+    initTrainingList(trainingInputs, trainingLabels, 30, predElms);
 
     let model = null;
     btnAdd.onclick = function()
@@ -29,6 +38,7 @@ function main()
         {
             const inputFeatures = drawer.features;
             const label = labelMapping[r.value];
+            trainingLabels.push(r.value);
 
             const liElm = document.createElement('li');
             document.getElementById('trainingSet').appendChild(liElm);
@@ -55,8 +65,10 @@ function main()
 
         }
         drawer.reset();
-        console.log(trainingInputs);
-        console.log(trainingOutputs);
+        console.log(JSON.stringify({
+            "trainingInputs" : trainingInputs,
+            "trainingLabels" : trainingLabels
+        }));
     }
 
     const btnTrain = document.getElementById('btnTrain');
@@ -93,6 +105,50 @@ function main()
         
     }
 
+}
+
+function initTrainingList(trainingInputs, trainingLabels, sizePx, predElms)
+{
+    for (let i = 0; i < trainingInputs.length; ++i)
+    {
+        const input = trainingInputs[i];
+        const output = trainingLabels[i];
+
+        const liElm = document.createElement('li');
+        document.getElementById('trainingSet').appendChild(liElm);
+        liElm.classList.add('example');
+
+        const canvas = document.createElement('canvas');
+        canvas.classList.add('shape');
+        liElm.appendChild(canvas);
+
+        canvas.width = sizePx;
+        canvas.height = sizePx;
+
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, sizePx, sizePx);
+        const imgd = ctx.getImageData(0, 0, sizePx, sizePx);
+        const pix = imgd.data;
+        for (var j = 0; j < pix.length; j += 4)
+        {
+            const ison = input[j / 4] == 1;
+
+            pix[j] = (ison) ? 0 : 255;
+            pix[j+1] = (ison) ? 0 : 255;
+            pix[j+2] = (ison) ? 0 : 255;
+        }
+        ctx.putImageData(imgd, 0, 0);
+        
+        const labelElm = document.createElement('span');
+        liElm.appendChild(labelElm);
+        labelElm.innerHTML = output;
+
+        const predElm = document.createElement('span');
+        liElm.appendChild(predElm);
+        predElms.push(predElm);   
+
+    }
 }
 
 function buildModel()
@@ -256,24 +312,9 @@ class SimpleDrawer
         offscreenCanvas.height = targetSizePx;
 
         const offscreenCtx = offscreenCanvas.getContext('2d');
+        offscreenCtx.fillStyle = 'white';
+        offscreenCtx.fillRect(0, 0, targetSizePx, targetSizePx);
         offscreenCtx.imageSmoothingQuality = "high";
-
-        // const aspectRatio = (this.maxX - this.minX) / (this.maxY - this.minY);
-        // let newWidth = 0;
-        // let newHeight = 0;
-        // if (aspectRatio > 1)
-        // {
-        //     newHeight = drawingSizePx / aspectRatio;
-        //     newWidth = drawingSizePx;
-        // }
-        // else 
-        // {
-        //     newHeight = drawingSizePx;
-        //     newWidth = drawingSizePx * aspectRatio;
-        // }
-
-        // offscreenCtx.drawImage(this.canvas, this.minX, this.minY, this.maxX - this.minX, 
-        //         this.maxY - this.minY, (targetSizePx - newWidth) / 2, (targetSizePx - newHeight) / 2, newWidth , newHeight);
 
         offscreenCtx.drawImage(this.canvas, this.minX, this.minY, 
             this.maxX - this.minX, 
