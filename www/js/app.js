@@ -11,7 +11,8 @@ const reverseLabels = ["line", "triangle", "square", "circle"];
 
 const CFG = {
     "epochs" : 100,
-    "inputPx" : 30
+    "inputPx" : 30,
+    "paddingPx" : 7
 }
 
 function main()
@@ -28,8 +29,10 @@ function run(data)
     const canvas = document.getElementById('canvasShapes');
     const normedCanvas = document.getElementById('resizedCanvas');
     const drawer = new SimpleDrawer(canvas, normedCanvas);
-
+    const progressBar = document.querySelector('.js-bar');
     const btnAdd = document.getElementById('btnAdd');
+    const btnTrain = document.getElementById('btnTrain');
+    const btnPredict = document.getElementById('btnPredict');
 
     const trainingInputs = data.trainingInputs;
     const trainingOutputs = data.trainingLabels.map((o) => labelMapping[o]);
@@ -57,15 +60,9 @@ function run(data)
 
         }
         drawer.reset();
-        // console.log(JSON.stringify({
-        //     "trainingInputs" : trainingInputs,
-        //     "trainingLabels" : trainingLabels
-        // }));
+        
     }
 
-    const progressBar = document.querySelector('.js-bar');
-    
-    const btnTrain = document.getElementById('btnTrain');
     btnTrain.onclick = async function()
     {
         model = buildModel();
@@ -84,7 +81,7 @@ function run(data)
             shuffle: true,
             callbacks: {
                 onEpochEnd: function(b, l) {
-                    const perc = Math.ceil(b * 100 / CFG.epochs);
+                    const perc = Math.ceil((b+1) * 100 / CFG.epochs);
                     progressBar.style.left = `-${100 - perc}%`;
                 }
             }
@@ -99,7 +96,7 @@ function run(data)
         
     }
 
-    const btnPredict = document.getElementById('btnPredict');
+    
     const outputCanvas = document.getElementById('vectorShapes');
     const outputCtx = outputCanvas.getContext('2d');
     btnPredict.onclick = function()
@@ -255,10 +252,12 @@ function buildModel()
 //
 class SimpleDrawer
 {
-    constructor(canvas, normedCanvas)
+    constructor(canvas)
     {
         this.canvas = canvas;
-        this.normedCanvas = normedCanvas;
+        this.normedCanvas = document.createElement('canvas');
+        this.normedCanvas.width = CFG.inputPx;
+        this.normedCanvas.height = CFG.inputPx;
 
         this.ctx = canvas.getContext('2d');
         
@@ -292,7 +291,7 @@ class SimpleDrawer
                 this.endy = e.offsetY;
 
                 this.drawing = false;
-                this.getBWPixels(normedCanvas.width);
+                this.getBWPixels();
 
             }
         };
@@ -337,16 +336,17 @@ class SimpleDrawer
         ctx.closePath();
     }
 
-    getBWPixels(targetSizePx)
+    getBWPixels()
     {
-        const ctx = this.ctx;
-        const paddingPx = 7;
+        const targetSizePx = this.normedCanvas.width;
 
+        const ctx = this.ctx;
+        const paddingPx = CFG.paddingPx;
+
+        // we add some padding so that the image is not right up the edges 
         const drawingSizePx = targetSizePx - paddingPx;
 
         const offscreenCanvas = this.normedCanvas;
-        offscreenCanvas.width = targetSizePx;
-        offscreenCanvas.height = targetSizePx;
 
         const offscreenCtx = offscreenCanvas.getContext('2d');
         offscreenCtx.fillStyle = 'white';
