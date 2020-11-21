@@ -3,11 +3,11 @@
 const labelMapping = {
         "line" : [1, 0, 0, 0], 
         "triangle" :   [0, 1, 0, 0],
-        "square" :  [0, 0, 1, 0],
-        "circle" :   [0, 0, 0, 1]
+        "rectangle" :  [0, 0, 1, 0],
+        "ellipse" :   [0, 0, 0, 1]
 }
 
-const reverseLabels = ["line", "triangle", "square", "circle"];
+const reverseLabels = ["line", "triangle", "rectangle", "ellipse"];
 
 const CFG = {
     "epochs" : 200,
@@ -123,7 +123,7 @@ function run(data)
         outputCtx.lineWidth = 5;
 
         outputCtx.beginPath();
-        if (label === "square")
+        if (label === "rectangle")
         {
             
             outputCtx.rect(drawer.minX, drawer.minY, width, height);
@@ -135,7 +135,7 @@ function run(data)
 
             outputCtx.lineTo(drawer.endx,  drawer.endy);
         }
-        else if (label === 'circle')
+        else if (label === 'ellipse')
         {
             outputCtx.ellipse(drawer.minX + 0.5 * width, drawer.minY + 0.5 * height, 0.5*width, 0.5*height, 0, 0, 2*Math.PI)
         }
